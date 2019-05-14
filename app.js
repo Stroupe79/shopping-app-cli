@@ -4,6 +4,8 @@ const inquirer = require ("inquirer");
 const prettyjson = require ("prettyjson");
 // const buy = require ("./buy.js");
 
+var productId = "";
+
 
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -60,23 +62,61 @@ function productBuy(){
     inquirer
         .prompt({
             type: "input",
-            message: "What is the ID of the item you are purchasing on?",
+            message: "What is the ID of the item you are purchasing?",
             name: "item"
         })
         .then(function(response){
+            productId = response.item;
             itemReturn(response);
         })
     };
 
 function itemReturn(id){
     console.log(id.item);
-    connection.query(`SELECT product_name, price, stock_quantity FROM products WHERE item_id = ?`, id.item, function(err, res, fields) {
+    connection.query(`SELECT product_name, price, stock_quantity FROM products WHERE item_id = ?`, productId, function(err, res, fields) {
         if (err) throw err;
         prettyJson(res);
+        purchase(id.item);
         closeConnection();
  
    })
 }
+
+function purchase(){
+    inquirer
+        .prompt({
+            type:"input",
+            message: "How many you like to purchase?",
+            name: "amount"
+        })
+        .then(function(response){
+            // console.log(response.amount)
+                // closeConnection();
+                if (response.amount > productId){
+                    console.log ("Not enough stock");
+                    console.log(productId);
+                    // closeConnection();
+                } else {
+                completePurchase(response.amount);
+                // closeConnection();
+                }
+         
+           })
+        
+        // })
+
+};
+
+function completePurchase(stock){
+    // connection.query(`UPDATE stock_quantity FROM products WHERE item_id = ?`, productId, function(err, res, fields) {
+    //     if (err) throw err;
+    //     prettyJson(res);
+    //     closeConnection();
+    // });
+    console.log("You have purchased " + stock + " of item " + productId)
+}
+
+
 
 
 function prettyJson(input){
