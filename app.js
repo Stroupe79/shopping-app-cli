@@ -1,6 +1,7 @@
 require('dotenv').config();
 const mysql = require ("mysql");
 const inquirer = require ("inquirer");
+const prettyjson = require ("prettyjson");
 
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -21,7 +22,7 @@ connection.connect(function(err) {
 
   function closeConnection(){
       connection.end();
-      console.log("Connection Closed")
+    //   console.log("Connection Closed")
   };
 
  function welcome(){ 
@@ -35,12 +36,10 @@ connection.connect(function(err) {
     ])
     .then(function (response) {
         if (response.action === "List Products") {
-            console.log("Got 'em")
             productList();
         } else if (response.action === "Bid on Product by ID") {
             productBid(response.action);
-        } else console.log ("Nothing")
-        closeConnection();
+        }
     });
 };
 
@@ -49,6 +48,34 @@ function productList(){
     console.log("Listing products.....");
     connection.query("SELECT * FROM products", function(err, res) {
         if (err) throw err;
-        console.log(res);
+        console.log(prettyjson.render(res, {
+            keysColor: 'white',
+            dashColor: 'green',
+            stringColor: 'red',
+            numberColor: 'green'
+        }));
+        closeConnection();
       });
+}
+
+function productBid(){
+    // productList();
+    inquirer
+        .prompt({
+            type: "input",
+            message: "What is the ID of the item you are bidding on?",
+            name: "item"
+        })
+        .then(function(response){
+            itemReturn(response);
+        })
+    };
+
+function itemReturn(id){
+    console.log(id.item);
+    connection.query(`SELECT product_name, price, stock_quantity FROM products WHERE item_id = ?`, id.item, function(err, res, fields) {
+        if (err) throw err;
+        console.log(prettyjson.render(res))
+        closeConnection();
+    })
 }
