@@ -2,6 +2,8 @@ require('dotenv').config();
 const mysql = require ("mysql");
 const inquirer = require ("inquirer");
 const prettyjson = require ("prettyjson");
+// const buy = require ("./buy.js");
+
 
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -30,15 +32,15 @@ connection.connect(function(err) {
     .prompt([{
             type: "list",
             message: "Hello, how can I help you?",
-            choices: ["List Products", "Bid on Product by ID"],
+            choices: ["List Products", "Purchase Product by ID"],
             name: "action"
         }
     ])
     .then(function (response) {
         if (response.action === "List Products") {
             productList();
-        } else if (response.action === "Bid on Product by ID") {
-            productBid(response.action);
+        } else if (response.action === "Purchase Product by ID") {
+            productBuy(response.action);
         }
     });
 };
@@ -48,22 +50,17 @@ function productList(){
     console.log("Listing products.....");
     connection.query("SELECT * FROM products", function(err, res) {
         if (err) throw err;
-        console.log(prettyjson.render(res, {
-            keysColor: 'white',
-            dashColor: 'green',
-            stringColor: 'red',
-            numberColor: 'green'
-        }));
+        prettyJson(res);
         closeConnection();
       });
 }
 
-function productBid(){
+function productBuy(){
     // productList();
     inquirer
         .prompt({
             type: "input",
-            message: "What is the ID of the item you are bidding on?",
+            message: "What is the ID of the item you are purchasing on?",
             name: "item"
         })
         .then(function(response){
@@ -75,7 +72,18 @@ function itemReturn(id){
     console.log(id.item);
     connection.query(`SELECT product_name, price, stock_quantity FROM products WHERE item_id = ?`, id.item, function(err, res, fields) {
         if (err) throw err;
-        console.log(prettyjson.render(res))
+        prettyJson(res);
         closeConnection();
-    })
+ 
+   })
+}
+
+
+function prettyJson(input){
+        console.log(prettyjson.render(input, {
+        keysColor: 'white',
+        dashColor: 'green',
+        stringColor: 'red',
+        numberColor: 'green'
+    }));
 }
