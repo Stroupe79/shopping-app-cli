@@ -80,7 +80,7 @@ function itemReturn(id){
         closeConnection();
  
    })
-}
+};
 
 function purchase(){
     inquirer
