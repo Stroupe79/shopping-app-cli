@@ -53,6 +53,7 @@ function productList(){
     connection.query("SELECT * FROM products", function(err, res) {
         if (err) throw err;
         prettyJson(res);
+        // console.log(res[0].product_name);
         closeConnection();
       });
 }
@@ -76,9 +77,7 @@ function itemReturn(id){
     connection.query(`SELECT product_name, price, stock_quantity FROM products WHERE item_id = ?`, productId, function(err, res, fields) {
         if (err) throw err;
         prettyJson(res);
-        purchase(id.item);
-        closeConnection();
- 
+        purchase(id.item); 
    })
 };
 
@@ -92,29 +91,36 @@ function purchase(){
         .then(function(response){
             // console.log(response.amount)
                 // closeConnection();
-                if (response.amount > productId){
+                connection.query(`SELECT product_name, price, stock_quantity FROM products WHERE item_id = ?`, productId, function(err, res, fields) {
+                if (err) throw err;            
+                if (response.amount > res[0].stock_quantity){
                     console.log ("Not enough stock");
-                    console.log(productId);
-                    // closeConnection();
+                    closeConnection();
                 } else {
-                completePurchase(response.amount);
-                // closeConnection();
+                completePurchase(response.amount, res[0].product_name);
                 }
-         
+            })
            })
-        
-        // })
-
 };
 
-function completePurchase(stock){
-    // connection.query(`UPDATE stock_quantity FROM products WHERE item_id = ?`, productId, function(err, res, fields) {
-    //     if (err) throw err;
-    //     prettyJson(res);
-    //     closeConnection();
-    // });
-    console.log("You have purchased " + stock + " of item " + productId)
-}
+function completePurchase(stock, name){
+    var update = `UPDATE products SET stock_quantity = stock_quantity - ${stock} WHERE item_id = ${productId}`
+    connection.query(update, function (err, result){
+        if (err) throw err; 
+        console.log(`You have purchased ${stock} of item ${name} leaving a remainder of ${newStock()}`);
+        // console.log(newStock())
+    })
+};
+
+function newStock(){
+    connection.query(`SELECT product_name, price, stock_quantity FROM products WHERE item_id = ?`, productId, function(err, res, fields) {
+        if (err) throw err;
+        let stock = res[0].stock_quantity;
+        console.log(stock);
+        closeConnection();
+        return stock;
+    }
+)};
 
 
 
@@ -126,4 +132,4 @@ function prettyJson(input){
         stringColor: 'red',
         numberColor: 'green'
     }));
-}
+};
