@@ -2,7 +2,6 @@ require('dotenv').config();
 const mysql = require ("mysql");
 const inquirer = require ("inquirer");
 const prettyjson = require ("prettyjson");
-// const buy = require ("./buy.js");
 
 var productId = "";
 
@@ -20,13 +19,11 @@ connection.connect(function(err) {
     if (err) throw err;
     console.log("connected as id " + connection.threadId + "\n");
     welcome();
-    // productList();
   });
 
 
   function closeConnection(){
       connection.end();
-    //   console.log("Connection Closed")
   };
 
  function welcome(){ 
@@ -53,13 +50,11 @@ function productList(){
     connection.query("SELECT * FROM products", function(err, res) {
         if (err) throw err;
         prettyJson(res);
-        // console.log(res[0].product_name);
         closeConnection();
       });
 }
 
 function productBuy(){
-    // productList();
     inquirer
         .prompt({
             type: "input",
@@ -89,8 +84,6 @@ function purchase(){
             name: "amount"
         })
         .then(function(response){
-            // console.log(response.amount)
-                // closeConnection();
                 connection.query(`SELECT product_name, price, stock_quantity FROM products WHERE item_id = ?`, productId, function(err, res, fields) {
                 if (err) throw err;            
                 if (response.amount > res[0].stock_quantity){
@@ -104,24 +97,17 @@ function purchase(){
 };
 
 function completePurchase(stock, name){
-    var update = `UPDATE products SET stock_quantity = stock_quantity - ${stock} WHERE item_id = ${productId}`
+    var update = `UPDATE products SET stock_quantity = stock_quantity - ${stock} WHERE item_id = ${productId}`;
+    var remStock = `SELECT product_name, price, stock_quantity FROM products WHERE item_id = ${productId}`;
     connection.query(update, function (err, result){
         if (err) throw err; 
-        console.log(`You have purchased ${stock} of item ${name} leaving a remainder of ${newStock()}`);
-        // console.log(newStock())
+    connection.query(remStock, function (err, result){
+        if (err) throw err; 
+        console.log(`You have purchased ${stock} of item ${name} leaving a remainder of ${result[0].stock_quantity}`);
+        closeConnection();
+    });
     })
 };
-
-function newStock(){
-    connection.query(`SELECT product_name, price, stock_quantity FROM products WHERE item_id = ?`, productId, function(err, res, fields) {
-        if (err) throw err;
-        let stock = res[0].stock_quantity;
-        console.log(stock);
-        closeConnection();
-        return stock;
-    }
-)};
-
 
 
 
